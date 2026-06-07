@@ -1,0 +1,6 @@
+task_id,name,priority,deadline,execution_time,profit
+1,Complete Backend,5,8,3,100
+2,Design Frontend,3,6,2,70
+3,Testing,4,10,2,80
+4,Documentation,2,12,1,50
+5,Bug Fixing,5,5,2,90

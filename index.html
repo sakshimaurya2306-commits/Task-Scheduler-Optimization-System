@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TaskFlow Optimizer</title>
+
+<style>
+:root {
+  --bg: #070a10;
+  --surface: #0d1320;
+  --surface-2: #121b2c;
+  --surface-3: #182338;
+  --line: #26344f;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --soft: #cbd5e1;
+  --primary: #06b6d4;
+  --green: #22c55e;
+  --orange: #f97316;
+  --red: #ef4444;
+  --violet: #8b5cf6;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-weight: 800;
+  cursor: pointer;
+  background: var(--primary);
+  color: #03131a;
+}
+
+button:hover {
+  filter: brightness(1.08);
+}
+
+button.secondary {
+  background: var(--surface-3);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+input,
+select {
+  width: 100%;
+  padding: 11px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #080f1d;
+  color: var(--text);
+}
+
+label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.app {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+}
+
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  padding: 22px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary), var(--violet));
+  display: grid;
+  place-items: center;
+  font-weight: 950;
+}
+
+.brand small {
+  display: block;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.nav {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.nav button {
+  background: transparent;
+  color: var(--muted);
+  text-align: left;
+  border: 1px solid transparent;
+}
+
+.nav button.active {
+  color: var(--text);
+  background: var(--surface-2);
+  border-color: var(--line);
+}
+
+.side-card {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+}
+
+.main {
+  padding: 24px;
+  overflow: hidden;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.topbar h1 {
+  font-size: clamp(28px, 4vw, 44px);
+}
+
+.topbar p {
+  color: var(--muted);
+  margin-top: 8px;
+  max-width: 760px;
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.kpi {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.kpi strong {
+  display: block;
+  font-size: 32px;
+}
+
+.kpi span {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.page {
+  display: none;
+}
+
+.page.active {
+  display: block;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr;
+  gap: 18px;
+}
+
+.panel {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 18px;
+}
+
+.panel-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 16px;
+}
+
+.panel-title h2 {
+  font-size: 18px;
+}
+
+.panel-title span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 13px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+
+th {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.badge.ok {
+  color: var(--green);
+  background: rgba(34, 197, 94, 0.13);
+}
+
+.badge.warn {
+  color: var(--orange);
+  background: rgba(249, 115, 22, 0.13);
+}
+
+.badge.bad {
+  color: var(--red);
+  background: rgba(239, 68, 68, 0.13);
+}
+
+.badge.skill {
+  color: var(--primary);
+  background: rgba(6, 182, 212, 0.13);
+}
+
+.gantt {
+  display: grid;
+  gap: 14px;
+}
+
+.timeline-axis {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 14px;
+  align-items: end;
+  margin-bottom: 2px;
+}
+
+.axis-label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.axis-track {
+  position: relative;
+  height: 24px;
+}
+
+.tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.tick::before {
+  content: "";
+  display: block;
+  width: 1px;
+  height: 8px;
+  margin: 0 auto 4px;
+  background: var(--line);
+}
+
+.resource-row {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 14px;
+  align-items: center;
+}
+
+.resource-name {
+  color: var(--soft);
+  font-weight: 850;
+}
+
+.track {
+  height: 48px;
+  background: #070d18;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.track::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(to right, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 25% 100%;
+  pointer-events: none;
+}
+
+.work-window {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(6, 182, 212, 0.06);
+  border-left: 1px solid rgba(6, 182, 212, 0.25);
+  border-right: 1px solid rgba(6, 182, 212, 0.25);
+}
+
+.bar {
+  position: absolute;
+  top: 8px;
+  height: 32px;
+  min-width: 38px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  color: white;
+  font-size: 12px;
+  font-weight: 900;
+  z-index: 2;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.bar.ok {
+  background: linear-gradient(90deg, #16a34a, #22c55e);
+}
+
+.bar.late {
+  background: linear-gradient(90deg, #f97316, #ef4444);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.form-grid .full {
+  grid-column: 1 / -1;
+}
+
+.stack {
+  display: grid;
+  gap: 14px;
+}
+
+.insight {
+  padding: 14px;
+  border-radius: 14px;
+  background: #080f1d;
+  border: 1px solid var(--line);
+}
+
+.insight b {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.insight p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+pre {
+  min-height: 420px;
+  background: #050914;
+  border: 1px solid var(--line);
+  color: #dbeafe;
+  border-radius: 16px;
+  padding: 18px;
+  white-space: pre-wrap;
+  line-height: 1.65;
+}
+
+@media (max-width: 1100px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    height: auto;
+  }
+
+  .kpis,
+  .grid,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .resource-row,
+  .timeline-axis {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">TF</div>
+      <div>
+        <strong>TaskFlow Optimizer</strong>
+        <small>Constraint scheduling</small>
+      </div>
+    </div>
+
+    <div class="nav">
+      <button class="active" onclick="openPage('dashboardPage', this)">Dashboard</button>
+      <button onclick="openPage('tasksPage', this)">Tasks</button>
+      <button onclick="openPage('resourcesPage', this)">Resources</button>
+      <button onclick="openPage('reportPage', this)">Report</button>
+    </div>
+
+    <div class="side-card">
+      <label>
+        Engine
+        <select id="engine" onchange="runScheduler()">
+          <option value="heuristic">Heuristic baseline</option>
+          <option value="solver">Optimization solver</option>
+        </select>
+      </label>
+
+      <label>
+        Objective
+        <select id="objective" onchange="runScheduler()">
+          <option value="hybrid">Balanced</option>
+          <option value="lateness">Minimize lateness</option>
+          <option value="cost">Minimize cost</option>
+        </select>
+      </label>
+
+      <label>
+        Scenario
+        <select id="scenario" onchange="runScheduler()">
+          <option value="normal">Normal operations</option>
+          <option value="urgent">Urgent QA request</option>
+          <option value="tight">Tighter deadlines</option>
+          <option value="reduced">Reduced backend capacity</option>
+        </select>
+      </label>
+
+      <label>
+        Planning horizon
+        <input id="horizon" type="number" min="24" max="96" value="48" onchange="runScheduler()" />
+      </label>
+    </div>
+  </aside>
+
+  <main class="main">
+    <section class="topbar">
+      <div>
+        <h1>Constraint-Aware Scheduler</h1>
+        <p>
+          Assign work to the right resource at the right time while respecting
+          dependencies, skills, working hours, capacity, and cost.
+        </p>
+      </div>
+
+      <div class="actions">
+        <button onclick="runScheduler()">Optimize</button>
+        <button class="secondary" onclick="resetAll()">Reset</button>
+      </div>
+    </section>
+
+    <section class="kpis">
+      <div class="kpi"><strong id="kpiScheduled">0</strong><span>Scheduled</span></div>
+      <div class="kpi"><strong id="kpiLate">0h</strong><span>Total lateness</span></div>
+      <div class="kpi"><strong id="kpiCost">₹0</strong><span>Total cost</span></div>
+      <div class="kpi"><strong id="kpiUtil">0%</strong><span>Utilization</span></div>
+    </section>
+
+    <section id="dashboardPage" class="page active">
+      <div class="grid">
+        <div class="panel">
+          <div class="panel-title">
+            <div>
+              <h2>Schedule Timeline</h2>
+              <span>Resource allocation across the planning horizon</span>
+            </div>
+          </div>
+          <div id="ganttBox" class="gantt"></div>
+        </div>
+
+        <div class="stack">
+          <div class="panel">
+            <div class="panel-title">
+              <h2>Plan Health</h2>
+              <span id="planStatus">Ready</span>
+            </div>
+            <div id="insights" class="stack"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">
+              <h2>Add Task</h2>
+              <span>Create a what-if task</span>
+            </div>
+
+            <div class="form-grid">
+              <label class="full">Task name <input id="taskName" value="Security Review" /></label>
+              <label>Duration <input id="taskDuration" type="number" min="1" value="3" /></label>
+              <label>Deadline <input id="taskDeadline" type="number" min="1" value="32" /></label>
+              <label>Priority <input id="taskPriority" type="number" min="1" max="5" value="4" /></label>
+              <label>
+                Skill
+                <select id="taskSkill">
+                  <option value="backend">backend</option>
+                  <option value="frontend">frontend</option>
+                  <option value="qa">qa</option>
+                  <option value="devops">devops</option>
+                </select>
+              </label>
+              <label class="full">
+                Depends on
+                <select id="taskDependency"></select>
+              </label>
+              <button class="full" onclick="addTask()">Add and optimize</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tasksPage" class="page">
+      <div class="panel">
+        <div class="panel-title">
+          <h2>Tasks</h2>
+          <span>Duration, deadline, skill, dependency, and assignment status</span>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Task</th>
+                <th>Duration</th>
+                <th>Deadline</th>
+                <th>Priority</th>
+                <th>Skill</th>
+                <th>Depends on</th>
+                <th>Assignment</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="taskTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="resourcesPage" class="page">
+      <div class="panel">
+        <div class="panel-title">
+          <h2>Resources</h2>
+          <span>Skills, shift windows, capacity, and hourly cost</span>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Resource</th>
+                <th>Skills</th>
+                <th>Shift</th>
+                <th>Capacity</th>
+                <th>Hourly cost</th>
+                <th>Allocated</th>
+              </tr>
+            </thead>
+            <tbody id="resourceTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="reportPage" class="page">
+      <div class="panel">
+        <div class="panel-title">
+          <h2>Optimization Report</h2>
+          <span>Generated from the current scenario</span>
+        </div>
+
+        <pre id="reportBox"></pre>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const baseTasks = [
+  { id: "T1", name: "API Contract", duration: 3, deadline: 14, priority: 5, skill: "backend", dependency: "" },
+  { id: "T2", name: "Backend Service", duration: 5, deadline: 24, priority: 5, skill: "backend", dependency: "T1" },
+  { id: "T3", name: "Frontend Shell", duration: 4, deadline: 26, priority: 4, skill: "frontend", dependency: "T1" },
+  { id: "T4", name: "QA Pass", duration: 4, deadline: 34, priority: 4, skill: "qa", dependency: "T2" },
+  { id: "T5", name: "Deployment", duration: 2, deadline: 40, priority: 5, skill: "devops", dependency: "T4" },
+  { id: "T6", name: "Analytics Setup", duration: 3, deadline: 42, priority: 3, skill: "frontend", dependency: "T3" }
+];
+
+const baseResources = [
+  { id: "R1", name: "Backend A", skills: ["backend", "qa"], start: 9, end: 17, capacity: 16, cost: 65 },
+  { id: "R2", name: "Frontend A", skills: ["frontend"], start: 10, end: 18, capacity: 16, cost: 58 },
+  { id: "R3", name: "QA A", skills: ["qa"], start: 11, end: 19, capacity: 14, cost: 42 },
+  { id: "R4", name: "DevOps A", skills: ["devops", "backend"], start: 9, end: 17, capacity: 12, cost: 78 }
+];
+
+let customTasks = [];
+let tasks = [];
+let resources = [];
+let plan = [];
+
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function prepareScenario() {
+  tasks = [...clone(baseTasks), ...clone(customTasks)];
+  resources = clone(baseResources);
+
+  const scenario = document.getElementById("scenario").value;
+
+  if (scenario === "urgent") {
+    tasks.push({
+      id: "T" + (tasks.length + 1),
+      name: "Urgent Regression",
+      duration: 4,
+      deadline: 28,
+      priority: 5,
+      skill: "qa",
+      dependency: "T4"
+    });
+  }
+
+  if (scenario === "tight") {
+    tasks = tasks.map(task => ({
+      ...task,
+      deadline: Math.max(10, task.deadline - 7)
+    }));
+  }
+
+  if (scenario === "reduced") {
+    resources = resources.map(resource =>
+      resource.id === "R1" ? { ...resource, capacity: 8 } : resource
+    );
+  }
+}
+
+function compareTaskPriority(a, b) {
+  if (a.deadline !== b.deadline) return a.deadline - b.deadline;
+  if (a.priority !== b.priority) return b.priority - a.priority;
+  return b.duration - a.duration;
+}
+
+function dependencyAwareOrder(taskList) {
+  const result = [];
+  const remaining = [...taskList];
+
+  while (remaining.length > 0) {
+    const available = remaining
+      .filter(task => !task.dependency || result.some(done => done.id === task.dependency))
+      .sort(compareTaskPriority);
+
+    if (!available.length) break;
+
+    const selected = available[0];
+    result.push(selected);
+
+    const index = remaining.findIndex(task => task.id === selected.id);
+    remaining.splice(index, 1);
+  }
+
+  return result;
+}
+
+function isInsideShift(start, end, resource) {
+  const startOfDay = start % 24;
+  const endOfDay = end % 24 === 0 ? 24 : end % 24;
+
+  if (end - start > resource.end - resource.start) return false;
+  return startOfDay >= resource.start && endOfDay <= resource.end && startOfDay < endOfDay;
+}
+
+function overlaps(resourceId, start, end, currentPlan) {
+  return currentPlan.some(item =>
+    item.resourceId === resourceId &&
+    start < item.end &&
+    end > item.start
+  );
+}
+
+function dependencyEnd(task, currentPlan) {
+  if (!task.dependency) return 0;
+
+  const dependency = currentPlan.find(item => item.id === task.dependency);
+  return dependency ? dependency.end : null;
+}
+
+function resourceUsed(resourceId, currentPlan) {
+  return currentPlan
+    .filter(item => item.resourceId === resourceId)
+    .reduce((sum, item) => sum + item.duration, 0);
+}
+
+function buildAssignment(task, resource, start) {
+  return {
+    ...task,
+    resourceId: resource.id,
+    resourceName: resource.name,
+    start,
+    end: start + task.duration,
+    cost: resource.cost
+  };
+}
+
+function feasibleAssignments(task, currentPlan) {
+  const horizon = Number(document.getElementById("horizon").value);
+  const depEnd = dependencyEnd(task, currentPlan);
+  const options = [];
+
+  if (depEnd === null) return options;
+
+  for (const resource of resources) {
+    if (!resource.skills.includes(task.skill)) continue;
+    if (resourceUsed(resource.id, currentPlan) + task.duration > resource.capacity) continue;
+
+    for (let start = depEnd; start <= horizon - task.duration; start++) {
+      const end = start + task.duration;
+
+      if (!isInsideShift(start, end, resource)) continue;
+      if (overlaps(resource.id, start, end, currentPlan)) continue;
+
+      options.push(buildAssignment(task, resource, start));
+
+      if (options.length >= 10) break;
+    }
+  }
+
+  return options;
+}
+
+function objectiveScore(currentPlan) {
+  const objective = document.getElementById("objective").value;
+  let latenessPenalty = 0;
+  let totalCost = 0;
+
+  for (const item of currentPlan) {
+    latenessPenalty += Math.max(0, item.end - item.deadline) * item.priority;
+    totalCost += item.duration * item.cost;
+  }
+
+  if (objective === "lateness") return latenessPenalty * 120 + totalCost * 0.15;
+  if (objective === "cost") return totalCost + latenessPenalty * 40;
+  return latenessPenalty * 80 + totalCost;
+}
+
+function heuristicSchedule() {
+  const ordered = dependencyAwareOrder(tasks);
+  const currentPlan = [];
+
+  for (const task of ordered) {
+    const options = feasibleAssignments(task, currentPlan);
+
+    if (!options.length) continue;
+
+    options.sort((a, b) => {
+      const aLate = Math.max(0, a.end - a.deadline);
+      const bLate = Math.max(0, b.end - b.deadline);
+
+      if (aLate !== bLate) return aLate - bLate;
+      if (a.end !== b.end) return a.end - b.end;
+      return a.cost - b.cost;
+    });
+
+    currentPlan.push(options[0]);
+  }
+
+  return currentPlan;
+}
+
+function solverSchedule() {
+  const ordered = dependencyAwareOrder(tasks);
+  let bestPlan = [];
+  let bestScore = Infinity;
+
+  function search(index, currentPlan) {
+    if (index === ordered.length) {
+      const score = objectiveScore(currentPlan);
+
+      if (score < bestScore) {
+        bestScore = score;
+        bestPlan = clone(currentPlan);
+      }
+
+      return;
+    }
+
+    const task = ordered[index];
+    const options = feasibleAssignments(task, currentPlan);
+
+    if (!options.length) {
+      search(index + 1, currentPlan);
+      return;
+    }
+
+    options.sort((a, b) => objectiveScore([...currentPlan, a]) - objectiveScore([...currentPlan, b]));
+
+    for (const option of options.slice(0, 6)) {
+      const nextPlan = [...currentPlan, option];
+
+      if (objectiveScore(nextPlan) <= bestScore + 5000) {
+        search(index + 1, nextPlan);
+      }
+    }
+  }
+
+  search(0, []);
+  return bestPlan.length ? bestPlan : heuristicSchedule();
+}
+
+async function solveWithBackend() {
+  const response = await fetch("http://127.0.0.1:8000/solve", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      tasks: tasks,
+      resources: resources,
+      horizon: Number(document.getElementById("horizon").value),
+      objective: document.getElementById("objective").value
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error("Backend solver request failed");
+  }
+
+  const data = await response.json();
+
+  if (!data.plan) {
+    throw new Error("Backend did not return a plan");
+  }
+
+  return data.plan;
+}
+
+async function runScheduler() {
+  prepareScenario();
+
+  const engine = document.getElementById("engine").value;
+
+  if (engine === "solver") {
+    try {
+      plan = await solveWithBackend();
+    } catch (error) {
+      console.error(error);
+      alert("Backend solver is not running. Falling back to browser heuristic.");
+      plan = heuristicSchedule();
+    }
+  } else {
+    plan = heuristicSchedule();
+  }
+
+  render();
+}
+
+function metrics() {
+  const scheduled = plan.length;
+  const totalLateness = plan.reduce((sum, item) => sum + Math.max(0, item.end - item.deadline), 0);
+  const totalCost = plan.reduce((sum, item) => sum + item.duration * item.cost, 0);
+  const capacity = resources.reduce((sum, resource) => sum + resource.capacity, 0);
+  const used = plan.reduce((sum, item) => sum + item.duration, 0);
+  const utilization = capacity ? Math.round((used / capacity) * 100) : 0;
+  const unscheduled = tasks.filter(task => !plan.some(item => item.id === task.id));
+
+  return { scheduled, totalLateness, totalCost, utilization, unscheduled };
+}
+
+function render() {
+  const m = metrics();
+
+  document.getElementById("kpiScheduled").innerText = m.scheduled;
+  document.getElementById("kpiLate").innerText = m.totalLateness + "h";
+  document.getElementById("kpiCost").innerText = "₹" + m.totalCost;
+  document.getElementById("kpiUtil").innerText = m.utilization + "%";
+
+  renderDependencyOptions();
+  renderGantt();
+  renderTasks(m);
+  renderResources();
+  renderInsights(m);
+  renderReport(m);
+}
+
+function renderAxis() {
+  const horizon = Number(document.getElementById("horizon").value);
+  const step = horizon <= 48 ? 12 : 24;
+  const ticks = [];
+
+  for (let hour = 0; hour <= horizon; hour += step) {
+    ticks.push(`
+      <span class="tick" style="left:${(hour / horizon) * 100}%">${hour}h</span>
+    `);
+  }
+
+  return `
+    <div class="timeline-axis">
+      <div class="axis-label">Resource</div>
+      <div class="axis-track">${ticks.join("")}</div>
+    </div>
+  `;
+}
+
+function renderWorkWindows(resource, horizon) {
+  let windows = "";
+
+  for (let dayStart = 0; dayStart < horizon; dayStart += 24) {
+    const left = ((dayStart + resource.start) / horizon) * 100;
+    const width = ((resource.end - resource.start) / horizon) * 100;
+
+    windows += `
+      <div class="work-window" style="left:${left}%;width:${width}%"></div>
+    `;
+  }
+
+  return windows;
+}
+
+function renderGantt() {
+  const box = document.getElementById("ganttBox");
+  const horizon = Number(document.getElementById("horizon").value);
+
+  const rows = resources.map(resource => {
+    const bars = plan
+      .filter(item => item.resourceId === resource.id)
+      .map(item => {
+        const left = (item.start / horizon) * 100;
+        const width = Math.max(5, (item.duration / horizon) * 100);
+        const late = item.end > item.deadline;
+
+        return `
+          <div class="bar ${late ? "late" : "ok"}"
+            style="left:${left}%;width:${width}%"
+            title="${item.name} | ${item.start}h-${item.end}h">
+            ${item.id}
+          </div>
+        `;
+      }).join("");
+
+    return `
+      <div class="resource-row">
+        <div class="resource-name">${resource.name}</div>
+        <div class="track">
+          ${renderWorkWindows(resource, horizon)}
+          ${bars}
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  box.innerHTML = renderAxis() + rows;
+}
+
+function renderTasks() {
+  const tbody = document.getElementById("taskTable");
+
+  tbody.innerHTML = tasks.map(task => {
+    const assignment = plan.find(item => item.id === task.id);
+    const isLate = assignment && assignment.end > assignment.deadline;
+
+    return `
+      <tr>
+        <td>${task.id}</td>
+        <td>${task.name}</td>
+        <td>${task.duration}h</td>
+        <td>${task.deadline}h</td>
+        <td>${task.priority}</td>
+        <td><span class="badge skill">${task.skill}</span></td>
+        <td>${task.dependency || "-"}</td>
+        <td>${assignment ? `${assignment.resourceName}, ${assignment.start}h-${assignment.end}h` : "-"}</td>
+        <td>
+          ${
+            assignment
+              ? `<span class="badge ${isLate ? "warn" : "ok"}">${isLate ? "Late" : "Assigned"}</span>`
+              : `<span class="badge bad">Unscheduled</span>`
+          }
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function renderResources() {
+  const tbody = document.getElementById("resourceTable");
+
+  tbody.innerHTML = resources.map(resource => {
+    const allocated = resourceUsed(resource.id, plan);
+
+    return `
+      <tr>
+        <td>${resource.name}</td>
+        <td>${resource.skills.join(", ")}</td>
+        <td>${resource.start}:00-${resource.end}:00</td>
+        <td>${resource.capacity}h</td>
+        <td>₹${resource.cost}/h</td>
+        <td>${allocated}h</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function renderInsights(m) {
+  const status = document.getElementById("planStatus");
+  const insights = document.getElementById("insights");
+  const lateJobs = plan.filter(item => item.end > item.deadline);
+
+  status.innerText = m.unscheduled.length || lateJobs.length ? "Needs attention" : "Healthy";
+
+  insights.innerHTML = `
+    <div class="insight">
+      <b>${m.unscheduled.length ? "Unscheduled work detected" : "All feasible tasks assigned"}</b>
+      <p>${m.unscheduled.length ? `${m.unscheduled.length} task(s) could not fit under the current constraints.` : "Every feasible task has been assigned to a compatible resource."}</p>
+    </div>
+
+    <div class="insight">
+      <b>${lateJobs.length ? "Deadline risk exists" : "No deadline risk"}</b>
+      <p>${lateJobs.length ? `${lateJobs.length} assigned task(s) finish after their deadline.` : "Assigned tasks complete within their deadlines."}</p>
+    </div>
+
+    <div class="insight">
+      <b>Selected engine</b>
+      <p>${document.getElementById("engine").value === "solver" ? "Optimization solver is searching multiple feasible assignments." : "Heuristic baseline is choosing the earliest feasible slot."}</p>
+    </div>
+  `;
+}
+
+function renderReport(m) {
+  const lines = plan.map(item =>
+    `${item.id} ${item.name} | ${item.resourceName} | ${item.start}h-${item.end}h | deadline ${item.deadline}h | cost ₹${item.duration * item.cost}`
+  ).join("\n");
+
+  const unscheduled = m.unscheduled.map(item => `${item.id} ${item.name}`).join("\n") || "None";
+
+  document.getElementById("reportBox").innerText =
+`Schedule Optimization Report
+
+Engine: ${document.getElementById("engine").value}
+Objective: ${document.getElementById("objective").value}
+Scenario: ${document.getElementById("scenario").value}
+Planning horizon: ${document.getElementById("horizon").value}h
+
+Scheduled Plan:
+${lines || "No tasks scheduled"}
+
+Unscheduled:
+${unscheduled}
+
+Summary:
+Scheduled tasks: ${m.scheduled}
+Total lateness: ${m.totalLateness}h
+Total cost: ₹${m.totalCost}
+Resource utilization: ${m.utilization}%
+
+Constraints:
+- Task dependencies
+- Resource skill compatibility
+- Working-hour windows
+- Capacity limits
+- No overlapping assignments`;
+}
+
+function renderDependencyOptions() {
+  const select = document.getElementById("taskDependency");
+  const currentValue = select.value;
+
+  select.innerHTML = `<option value="">No dependency</option>` + tasks.map(task =>
+    `<option value="${task.id}">${task.id} - ${task.name}</option>`
+  ).join("");
+
+  if ([...select.options].some(option => option.value === currentValue)) {
+    select.value = currentValue;
+  }
+}
+
+function addTask() {
+  const nextId = "T" + (baseTasks.length + customTasks.length + 1);
+
+  customTasks.push({
+    id: nextId,
+    name: document.getElementById("taskName").value.trim(),
+    duration: Number(document.getElementById("taskDuration").value),
+    deadline: Number(document.getElementById("taskDeadline").value),
+    priority: Number(document.getElementById("taskPriority").value),
+    skill: document.getElementById("taskSkill").value,
+    dependency: document.getElementById("taskDependency").value
+  });
+
+  runScheduler();
+}
+
+function resetAll() {
+  customTasks = [];
+  document.getElementById("engine").value = "heuristic";
+  document.getElementById("objective").value = "hybrid";
+  document.getElementById("scenario").value = "normal";
+  document.getElementById("horizon").value = "48";
+  runScheduler();
+}
+
+function openPage(pageId, button) {
+  document.querySelectorAll(".page").forEach(page => page.classList.remove("active"));
+  document.querySelectorAll(".nav button").forEach(btn => btn.classList.remove("active"));
+
+  document.getElementById(pageId).classList.add("active");
+  button.classList.add("active");
+}
+
+runScheduler();
+</script>
+</body>
+</html>
