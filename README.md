@@ -257,5 +257,5 @@ This project demonstrates:
 - Add multi-day calendar rules and holidays
 
 ## Author
-Created by YOUR_NAME.
+Sakshi Ramakabal Maurya B.Tech in Information Technology at K.j. Somaiya institute of technology
 
